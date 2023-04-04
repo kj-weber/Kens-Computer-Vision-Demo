@@ -2,6 +2,7 @@ import ctypes
 import os
 from sys import platform, version
 
+from steady_core import steadyCore
 
 class Core:
     def __init__(self):
@@ -29,3 +30,4 @@ class Core:
             os.system('cmd /c "pip install pip-review"')
             os.system('cmd /c "pip-review --auto"')
             print("Your system's pip installer version and every dependancy of this software has been checked for updates automatically.")
+        steadyCore()
