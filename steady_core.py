@@ -16,13 +16,15 @@ class steadyCore:
     def __init__(self):
         """
 
-        A setup program that is OS independant
+        A setup program that is OS independent, spins off the main processes of the demo
 
         """
         print("[STEADY CORE INITIALIZED]: Setup complete, welcome to the demo...")
         self.video_sources = self.get_video_sources()
         self.live_cameras = self.find_changing_sources()
+
         self.camera_feed = cv2.VideoCapture(self.select_most_eventful_camera())
+
         self.camera_to_feature_queue = multiprocessing.Queue()
         self.camera_to_ui_queue = multiprocessing.Queue()
         self.feature_to_ui_queue = multiprocessing.Queue()
