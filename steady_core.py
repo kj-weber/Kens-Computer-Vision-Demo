@@ -3,6 +3,7 @@ import multiprocessing
 import numpy as np
 import os
 from sys import platform, version
+import time #TO-DO remove
 
 import cv2
 
@@ -25,15 +26,16 @@ class steadyCore:
 
         self.camera_feed = cv2.VideoCapture(self.select_most_eventful_camera())
 
-        self.camera_to_feature_queue = multiprocessing.Queue()
-        self.camera_to_ui_queue = multiprocessing.Queue()
-        self.feature_to_ui_queue = multiprocessing.Queue()
-        self.termination_queue = multiprocessing.Queue()
-        self.camera_process = multiprocessing.Process(target=self.multiprocessing_camera_process(), args=(self.termination_queue, self.camera_to_feature_queue, self.camera_to_ui_queue))
-        self.feature_process = multiprocessing.Process(target=self.multiprocessing_camera_process(), args=(self.termination_queue, self.camera_to_feature_queue, self.feature_to_ui_queue))
-        self.user_interface_process = multiprocessing.Process(target=self.multiprocessing_ui_process(), args=(self.termination_queue, self.camera_to_ui_queue, self.feature_to_ui_queue))
+        camera_to_feature_queue = multiprocessing.Queue()
+        camera_to_ui_queue = multiprocessing.Queue()
+        feature_to_ui_queue = multiprocessing.Queue()
+        termination_queue = multiprocessing.Queue()
+        # termination_queue.put(0)
+        camera_process = multiprocessing.Process(target=multiprocessing_camera_process, args=(termination_queue, camera_to_feature_queue, camera_to_ui_queue,))
+        self.feature_process = multiprocessing.Process(target=multiprocessing_feature_process, args=(termination_queue, camera_to_feature_queue, feature_to_ui_queue,))
+        self.user_interface_process = multiprocessing.Process(target=multiprocessing_ui_process, args=(termination_queue, camera_to_ui_queue, feature_to_ui_queue,))
 
-        self.camera_process.start()
+        camera_process.start()
         self.feature_process.start()
         self.user_interface_process.start()
 
@@ -52,6 +54,7 @@ class steadyCore:
             try:
                 cap = cv2.VideoCapture(index)
                 if not cap.read()[0]:
+                    cap.release()
                     return index
                 else:
                     arr.append(index)
@@ -80,9 +83,15 @@ class steadyCore:
                 if self.find_duplicates(frame_1, frame_2)[0] == False:
                     print("[STATUS]: Camera", camera, "is live and refreshing...")
                     arr.append([camera, self.is_duplicate[1]])
+                    camera_test.release()
                 else:
                     print("[STATUS]: Camera", camera, "is a still image...")
+                    camera_test.release()
             finally:
+                try:
+                    camera_test.release()
+                except:
+                    print("[STATUS}: Camera test closed...")
                 return arr
 
 
@@ -126,19 +135,22 @@ class steadyCore:
         return current_leader[0]
 
 
-    def multiprocessing_camera_process(self):
-        # TO-DO
-        while True:
-            print("hello camera")
+def multiprocessing_camera_process(termination_queue, camera_to_feature_queue, camera_to_ui_queue):
+    # TO-DO
+    while True:
+        print("hello camera")
+        time.sleep(2)
 
 
-    def multiprocessing_feature_process(self):
-        # TO-DO
-        while True:
-            print("hello feature")
+def multiprocessing_feature_process(termination_queue, camera_to_feature_queue, feature_to_ui_queue):
+    # TO-DO
+    while True:
+        print("hello feature")
+        time.sleep(2)
 
 
-    def multiprocessing_ui_process(self):
-        # TO-DO
-        while True:
-            print("hello ui")
+def multiprocessing_ui_process(termination_queue, camera_to_ui_queue, feature_to_ui_queue):
+    # TO-DO
+    while True:
+        print("hello ui")
+        time.sleep(2)
