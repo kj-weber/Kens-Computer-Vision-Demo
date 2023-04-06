@@ -75,17 +75,14 @@ class steadyCore:
         arr = []
         for camera in range(0, self.video_sources + 1):
             try:
-                print("[STATUS]: Reading available camera locally: ", camera)
                 camera_test = cv2.VideoCapture(camera)
                 ret_2, frame_1 = camera_test.read()
                 ret_2, frame_2 = camera_test.read()
                 self.is_duplicate = self.find_duplicates()
                 if self.find_duplicates(frame_1, frame_2)[0] == False:
-                    print("[STATUS]: Camera", camera, "is live and refreshing...")
                     arr.append([camera, self.is_duplicate[1]])
                     camera_test.release()
                 else:
-                    print("[STATUS]: Camera", camera, "is a still image...")
                     camera_test.release()
             finally:
                 try:
@@ -131,7 +128,6 @@ class steadyCore:
         for camera_tuple in self.live_cameras:
             if camera_tuple[1] > current_leader[1]:
                 current_leader = camera_tuple
-        print("[STATUS]: Camera feed",current_leader[0], "selected...")
         return current_leader[0]
 
 
