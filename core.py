@@ -1,7 +1,7 @@
 import os
 from sys import version
 
-from steady_core import steadyCore
+from steady_core import SteadyCore
 
 class Core:
     """
@@ -31,4 +31,4 @@ class Core:
             os.system('cmd /c "pip-review --auto"')
             os.system('cmd /c "pip install opencv-python"')
             print("[CORE COMPLETE] Your system's pip installer version and every dependancy of this software has been checked for updates automatically.")
-        steadyCore()
+        SteadyCore(self.screensize)

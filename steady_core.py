@@ -8,18 +8,19 @@ import time #TO-DO remove
 import cv2
 
 
-class steadyCore:
+class SteadyCore:
     """
 
     A setup program that is OS independant
 
     """
-    def __init__(self):
+    def __init__(self, screen_size):
         """
 
         A setup program that is OS independent, spins off the main processes of the demo
 
         """
+        SCREENSIZE = screen_size
         print("[STEADY CORE INITIALIZED]: Setup complete, welcome to the demo...")
         self.video_sources = self.get_video_sources()
         self.live_cameras = self.find_changing_sources()
@@ -33,12 +34,11 @@ class steadyCore:
         # termination_queue.put(0)
         camera_process = multiprocessing.Process(target=multiprocessing_camera_process, args=(termination_queue, camera_to_feature_queue, camera_to_ui_queue,))
         self.feature_process = multiprocessing.Process(target=multiprocessing_feature_process, args=(termination_queue, camera_to_feature_queue, feature_to_ui_queue,))
-        self.user_interface_process = multiprocessing.Process(target=multiprocessing_ui_process, args=(termination_queue, camera_to_ui_queue, feature_to_ui_queue,))
+        self.user_interface_process = multiprocessing.Process(target=multiprocessing_ui_process, args=(termination_queue, camera_to_ui_queue, feature_to_ui_queue,SCREENSIZE,))
 
         camera_process.start()
         self.feature_process.start()
         self.user_interface_process.start()
-
 
     def get_video_sources(self):
         """
@@ -62,7 +62,6 @@ class steadyCore:
                 index += 1
             finally:
                 return index
-
 
     def find_changing_sources(self):
         """
@@ -91,7 +90,6 @@ class steadyCore:
                     print("[STATUS}: Camera test closed...")
                 return arr
 
-
     def find_duplicates(self, img_1, img_2):
         """
         Checks two images to determine the mean squared error(mse) between them
@@ -115,7 +113,6 @@ class steadyCore:
         else:
             return True, err
 
-
     def select_most_eventful_camera(self):
         """
         Accesses the list of camera sources available as defined in find_changing_sources, and chooses one for the demo.
@@ -132,7 +129,7 @@ class steadyCore:
 
 
 def multiprocessing_camera_process(termination_queue, camera_to_feature_queue, camera_to_ui_queue):
-    # TO-DO
+    termination_queue.put(0)
     while True:
         print("hello camera")
         time.sleep(2)
@@ -145,8 +142,22 @@ def multiprocessing_feature_process(termination_queue, camera_to_feature_queue, 
         time.sleep(2)
 
 
-def multiprocessing_ui_process(termination_queue, camera_to_ui_queue, feature_to_ui_queue):
-    # TO-DO
+def multiprocessing_ui_process(termination_queue, camera_to_ui_queue, feature_to_ui_queue, SCREEN_SIZE):
+    content = np.zeros((SCREEN_SIZE[1], SCREEN_SIZE[0], 3), np.uint8)
+    cv2.namedWindow("Ken's Demo", cv2.WINDOW_NORMAL)  # Create window with freedom of dimensions
+    cv2.imshow("Ken's Demo", content)
+    cv2.waitKey(10)
     while True:
-        print("hello ui")
+        print(SCREEN_SIZE[1], SCREEN_SIZE[0])
+        try:
+            termination = termination_queue.get_nowait()
+            empty = False
+        except:
+            empty = True
+        if empty or not termination:
+            exit()
+        img = camera_to_ui_queue.get_nowait()
+        output = feature_to_ui_queue.get_nowait()
+        cv2.imshow("Ken's Demo", content)
+        cv2.waitKey(100)
         time.sleep(2)
