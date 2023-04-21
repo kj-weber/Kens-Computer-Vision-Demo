@@ -33,12 +33,16 @@ class SteadyCore:
         termination_queue = multiprocessing.Queue()
         # termination_queue.put(0)
         camera_process = multiprocessing.Process(target=multiprocessing_camera_process, args=(termination_queue, camera_to_feature_queue, camera_to_ui_queue,))
-        self.feature_process = multiprocessing.Process(target=multiprocessing_feature_process, args=(termination_queue, camera_to_feature_queue, feature_to_ui_queue,))
-        self.user_interface_process = multiprocessing.Process(target=multiprocessing_ui_process, args=(termination_queue, camera_to_ui_queue, feature_to_ui_queue,SCREENSIZE,))
+        feature_process = multiprocessing.Process(target=multiprocessing_feature_process, args=(termination_queue, camera_to_feature_queue, feature_to_ui_queue,))
+        user_interface_process = multiprocessing.Process(target=multiprocessing_ui_process, args=(termination_queue, camera_to_ui_queue, feature_to_ui_queue,SCREENSIZE,))
 
         camera_process.start()
-        self.feature_process.start()
-        self.user_interface_process.start()
+        feature_process.start()
+        user_interface_process.start()
+
+        camera_process.join()
+        feature_process.join()
+        user_interface_process.join()
 
     def get_video_sources(self):
         """
@@ -128,36 +132,47 @@ class SteadyCore:
         return current_leader[0]
 
 
+def look_and_clear(queue):
+    value = 0.0
+    while True:
+        try:
+            value = queue.get_nowait()
+        except:
+            return value
+
+
+
 def multiprocessing_camera_process(termination_queue, camera_to_feature_queue, camera_to_ui_queue):
     termination_queue.put(0)
     while True:
         print("hello camera")
-        time.sleep(2)
-
+        time.sleep(10 / 1000)
 
 def multiprocessing_feature_process(termination_queue, camera_to_feature_queue, feature_to_ui_queue):
     # TO-DO
     while True:
         print("hello feature")
-        time.sleep(2)
+        time.sleep(10 / 1000)
 
 
 def multiprocessing_ui_process(termination_queue, camera_to_ui_queue, feature_to_ui_queue, SCREEN_SIZE):
     content = np.zeros((SCREEN_SIZE[1], SCREEN_SIZE[0], 3), np.uint8)
     cv2.namedWindow("Ken's Demo", cv2.WINDOW_NORMAL)  # Create window with freedom of dimensions
-    cv2.imshow("Ken's Demo", content)
-    cv2.waitKey(10)
     while True:
-        print(SCREEN_SIZE[1], SCREEN_SIZE[0])
-        try:
-            termination = termination_queue.get_nowait()
-            empty = False
-        except:
-            empty = True
-        if empty or not termination:
-            exit()
-        img = camera_to_ui_queue.get_nowait()
-        output = feature_to_ui_queue.get_nowait()
         cv2.imshow("Ken's Demo", content)
-        cv2.waitKey(100)
-        time.sleep(2)
+        cv2.waitKey(10)
+        print("hello ui")
+        # try:
+        #     termination = termination_queue.get_nowait()
+        #     empty = False
+        # except:
+        #     termination = False
+        #     empty = True
+        # if empty and not termination:
+        #     exit()
+        # try:
+        #     img = camera_to_ui_queue.get_nowait()
+        #     print(img)
+        # except:
+        #     continue
+        # output = feature_to_ui_queue.get_nowait()

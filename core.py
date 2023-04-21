@@ -26,7 +26,7 @@ class Core:
             self.screensize = self.user32.GetSystemMetrics(78), self.user32.GetSystemMetrics(79)
             print("[CORE STATUS]: Checking local Python, pip, and python versions and updating as required...")
             self.version = version[0:4].rstrip(".")
-            os.system('cmd /c "pip install --upgrade pip"')
+            os.system('cmd /c "python.exe -m pip install --upgrade pip"')
             os.system('cmd /c "pip install pip-review"')
             os.system('cmd /c "pip-review --auto"')
             os.system('cmd /c "pip install opencv-python"')
