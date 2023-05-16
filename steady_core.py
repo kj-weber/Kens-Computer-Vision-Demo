@@ -24,15 +24,15 @@ class SteadyCore:
         print("[STEADY CORE INITIALIZED]: Setup complete, welcome to the demo...")
         self.video_sources = self.get_video_sources()
         self.live_cameras = self.find_changing_sources()
-
-        self.camera_feed = cv2.VideoCapture(self.select_most_eventful_camera())
+        self.camera_source = self.select_most_eventful_camera()
+        print(self.camera_source)
 
         camera_to_feature_queue = multiprocessing.Queue()
         camera_to_ui_queue = multiprocessing.Queue()
         feature_to_ui_queue = multiprocessing.Queue()
         termination_queue = multiprocessing.Queue()
-        # termination_queue.put(0)
-        camera_process = multiprocessing.Process(target=multiprocessing_camera_process, args=(termination_queue, camera_to_feature_queue, camera_to_ui_queue,))
+        termination_queue.put(0)
+        camera_process = multiprocessing.Process(target=multiprocessing_camera_process, args=(termination_queue, camera_to_feature_queue, camera_to_ui_queue,self.camera_source))
         feature_process = multiprocessing.Process(target=multiprocessing_feature_process, args=(termination_queue, camera_to_feature_queue, feature_to_ui_queue,))
         user_interface_process = multiprocessing.Process(target=multiprocessing_ui_process, args=(termination_queue, camera_to_ui_queue, feature_to_ui_queue,SCREENSIZE,))
 
@@ -80,9 +80,10 @@ class SteadyCore:
             try:
                 camera_test = cv2.VideoCapture(camera)
                 ret_2, frame_1 = camera_test.read()
+                time.sleep(1)
                 ret_2, frame_2 = camera_test.read()
-                self.is_duplicate = self.find_duplicates()
-                if self.find_duplicates(frame_1, frame_2)[0] == False:
+                self.is_duplicate = self.find_duplicates(frame_1, frame_2)
+                if self.is_duplicate[0] == False:
                     arr.append([camera, self.is_duplicate[1]])
                     camera_test.release()
                 else:
@@ -133,7 +134,7 @@ class SteadyCore:
 
 
 def look_and_clear(queue):
-    value = 0.0
+    value = None
     while True:
         try:
             value = queue.get_nowait()
@@ -142,26 +143,30 @@ def look_and_clear(queue):
 
 
 
-def multiprocessing_camera_process(termination_queue, camera_to_feature_queue, camera_to_ui_queue):
-    termination_queue.put(0)
+def multiprocessing_camera_process(termination_queue, camera_to_feature_queue, camera_to_ui_queue, camera_source):
+    web_cam = cv2.VideoCapture(camera_source)
     while True:
-        print("hello camera")
-        time.sleep(10 / 1000)
+        ret, img = web_cam.read()
+        camera_to_feature_queue.put(img)
+
 
 def multiprocessing_feature_process(termination_queue, camera_to_feature_queue, feature_to_ui_queue):
     # TO-DO
     while True:
-        print("hello feature")
-        time.sleep(10 / 1000)
+        img = look_and_clear(camera_to_feature_queue)
+        feature_to_ui_queue.put(img)
 
 
 def multiprocessing_ui_process(termination_queue, camera_to_ui_queue, feature_to_ui_queue, SCREEN_SIZE):
-    content = np.zeros((SCREEN_SIZE[1], SCREEN_SIZE[0], 3), np.uint8)
     cv2.namedWindow("Ken's Demo", cv2.WINDOW_NORMAL)  # Create window with freedom of dimensions
+    # TO DO CREATE LAST_CONTENT AND CONTENT AS BLACK IMAGES WITH SIZE SCREEN_SIZE
     while True:
+        last_content = content
+        content = look_and_clear(feature_to_ui_queue)
+        if content is None:
+            last_content = content
         cv2.imshow("Ken's Demo", content)
         cv2.waitKey(10)
-        print("hello ui")
         # try:
         #     termination = termination_queue.get_nowait()
         #     empty = False
