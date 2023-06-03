@@ -20,7 +20,7 @@ class SteadyCore:
         A setup program that is OS independent, spins off the main processes of the demo
 
         """
-        SCREENSIZE = screen_size
+        self.SCREENSIZE = screen_size
         print("[STEADY CORE INITIALIZED]: Setup complete, welcome to the demo...")
         self.video_sources = self.get_video_sources()
         self.live_cameras = self.find_changing_sources()
@@ -34,7 +34,7 @@ class SteadyCore:
         termination_queue.put(0)
         camera_process = multiprocessing.Process(target=multiprocessing_camera_process, args=(termination_queue, camera_to_feature_queue, camera_to_ui_queue,self.camera_source))
         feature_process = multiprocessing.Process(target=multiprocessing_feature_process, args=(termination_queue, camera_to_feature_queue, feature_to_ui_queue,))
-        user_interface_process = multiprocessing.Process(target=multiprocessing_ui_process, args=(termination_queue, camera_to_ui_queue, feature_to_ui_queue,SCREENSIZE,))
+        user_interface_process = multiprocessing.Process(target=multiprocessing_ui_process, args=(termination_queue, camera_to_ui_queue, feature_to_ui_queue,self.SCREENSIZE,))
 
         camera_process.start()
         feature_process.start()
