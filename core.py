@@ -37,5 +37,7 @@ class Core:
 if __name__ == "__main__":
     import sys
     from steady_core import SteadyCore
-    print("calling steady core")
-    SteadyCore(sys.argv[1])
+    print("[STATUS] Loading... Please wait...")
+    res = sys.argv[1].split(",")
+    screensize = [int(res[0]), int(res[1])]
+    SteadyCore(screensize)

@@ -147,26 +147,34 @@ def multiprocessing_camera_process(termination_queue, camera_to_feature_queue, c
     web_cam = cv2.VideoCapture(camera_source)
     while True:
         ret, img = web_cam.read()
-        camera_to_feature_queue.put(img)
+        if not ret and img.size.width > 0:
+            camera_to_feature_queue.put(img)
+        else:
+            camera_to_feature_queue.put(None)
+        time.sleep(0.005)
 
 
 def multiprocessing_feature_process(termination_queue, camera_to_feature_queue, feature_to_ui_queue):
     # TO-DO
     while True:
         img = look_and_clear(camera_to_feature_queue)
-        feature_to_ui_queue.put(img)
+        if img is not None:
+            feature_to_ui_queue.put(img)
+        else:
+            feature_to_ui_queue.put(None)
 
 
 def multiprocessing_ui_process(termination_queue, camera_to_ui_queue, feature_to_ui_queue, SCREEN_SIZE):
-    cv2.namedWindow("Ken's Demo", cv2.WINDOW_NORMAL)  # Create window with freedom of dimensions
+    # cv2.namedWindow("Ken's Demo", cv2.WINDOW_NORMAL)  # Create window with freedom of dimensions
     # TO DO CREATE LAST_CONTENT AND CONTENT AS BLACK IMAGES WITH SIZE SCREEN_SIZE
+    content = np.zeros((SCREEN_SIZE[1], SCREEN_SIZE[0], 3))
     while True:
         last_content = content
         content = look_and_clear(feature_to_ui_queue)
         if content is None:
             last_content = content
         cv2.imshow("Ken's Demo", content)
-        cv2.waitKey(10)
+        cv2.waitKey(0.005)
         # try:
         #     termination = termination_queue.get_nowait()
         #     empty = False
