@@ -8,7 +8,7 @@ class Core:
     A setup program that does some python-os interfacing, for a more stable demo.
 
     """
-    def __init__(self):
+    def __init__(self, debug):
         from sys import platform
         print("[CORE INITIALIZED]: Kenneth's DEMO core application created...")
         if platform == "linux" or platform == "linux2":
@@ -18,7 +18,6 @@ class Core:
         elif platform == "darwin":
             os.system("bash setup.sh")
             print("[DEBUG] [1] ", os.system("which python"))
-            exit()
 
             self.screensize = [0,0]
         elif platform == "win32":
@@ -39,5 +38,6 @@ if __name__ == "__main__":
     from steady_core import SteadyCore
     print("[STATUS] Loading... Please wait...")
     res = sys.argv[1].split(",")
+    IS_MAC = True
     screensize = [int(res[0]), int(res[1])]
-    SteadyCore(screensize)
+    SteadyCore(screensize, IS_MAC)

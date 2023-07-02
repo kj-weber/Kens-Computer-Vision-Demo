@@ -14,25 +14,25 @@ class SteadyCore:
     A setup program that is OS independant
 
     """
-    def __init__(self, screen_size):
+    def __init__(self, screen_size, is_mac):
         """
 
         A setup program that is OS independent, spins off the main processes of the demo
 
         """
         self.SCREENSIZE = screen_size
+        self.IS_MAC = is_mac
         print("[STEADY CORE INITIALIZED]: Setup complete, welcome to the demo...")
         self.video_sources = self.get_video_sources()
         self.live_cameras = self.find_changing_sources()
         self.camera_source = self.select_most_eventful_camera()
-        print(self.camera_source)
 
         camera_to_feature_queue = multiprocessing.Queue()
         camera_to_ui_queue = multiprocessing.Queue()
         feature_to_ui_queue = multiprocessing.Queue()
         termination_queue = multiprocessing.Queue()
         termination_queue.put(0)
-        camera_process = multiprocessing.Process(target=multiprocessing_camera_process, args=(termination_queue, camera_to_feature_queue, camera_to_ui_queue,self.camera_source))
+        camera_process = multiprocessing.Process(target=multiprocessing_camera_process, args=(termination_queue, camera_to_feature_queue, camera_to_ui_queue,self.camera_source, self.IS_MAC))
         feature_process = multiprocessing.Process(target=multiprocessing_feature_process, args=(termination_queue, camera_to_feature_queue, feature_to_ui_queue,))
         user_interface_process = multiprocessing.Process(target=multiprocessing_ui_process, args=(termination_queue, camera_to_ui_queue, feature_to_ui_queue,self.SCREENSIZE,))
 
@@ -143,17 +143,23 @@ def look_and_clear(queue):
 
 
 
-def multiprocessing_camera_process(termination_queue, camera_to_feature_queue, camera_to_ui_queue, camera_source):
+def multiprocessing_camera_process(termination_queue, camera_to_feature_queue, camera_to_ui_queue, camera_source, is_mac_os):
     web_cam = cv2.VideoCapture(camera_source)
-    while True:
-        ret, img = web_cam.read()
-        if not ret and img.size.width > 0:
+    if not is_mac_os:
+        while True:
+            ret, img = web_cam.read()
+            # Mac prevents non-Apple developers from reading webcam :(
+            if not ret and img.size.width > 0:
+                camera_to_feature_queue.put(img)
+            else:
+                camera_to_feature_queue.put(None)
+            time.sleep(0.001)
+    else:
+        img = debug_image_loader()
+        while True:
             camera_to_feature_queue.put(img)
-        else:
-            camera_to_feature_queue.put(None)
-        time.sleep(0.005)
-
-
+            time.sleep(0.005)
+            
 def multiprocessing_feature_process(termination_queue, camera_to_feature_queue, feature_to_ui_queue):
     # TO-DO
     while True:
@@ -172,9 +178,9 @@ def multiprocessing_ui_process(termination_queue, camera_to_ui_queue, feature_to
         last_content = content
         content = look_and_clear(feature_to_ui_queue)
         if content is None:
-            last_content = content
+            content = last_content
         cv2.imshow("Ken's Demo", content)
-        cv2.waitKey(0.005)
+        cv2.waitKey(5)
         # try:
         #     termination = termination_queue.get_nowait()
         #     empty = False
@@ -189,3 +195,7 @@ def multiprocessing_ui_process(termination_queue, camera_to_ui_queue, feature_to
         # except:
         #     continue
         # output = feature_to_ui_queue.get_nowait()
+
+
+def debug_image_loader():
+    return cv2.imread(os.path.join("src", "mac_debug_img.png"))
