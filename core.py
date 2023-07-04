@@ -1,6 +1,6 @@
 import os
-from sys import version
-
+from sys import platform, version
+import subprocess
 
 class Core:
     """
@@ -21,30 +21,55 @@ class Core:
 
         :param debug: @TO-DO A debug parameter which uses pre-set values for each input and queue to test new code changes.
         """
-        from sys import platform
-        print("[CORE INITIALIZED]: Kenneth's DEMO core application created...")
+        print("[STATUS]: CORE INITIALIZED, Kenneth's DEMO core application created...")
+        self.screensize = [0, 0]
         if platform == "linux" or platform == "linux2":
             # TO-DO linux
             print("Please try this demo from a windows device")
             exit()
         elif platform == "darwin":
-            os.system("bash setup.sh")
-            print("[DEBUG] [1] ", os.system("which python"))
-
-            self.screensize = [0,0]
+            has_wifi = self.check_if_user_has_wifi()
+            if self.check_if_user_has_wifi():
+                os.system("bash setup.sh")
+            else:
+                try:
+                    os.system("bash run.sh")
+                except:
+                    print("[STATUS] ERROR: Hi there, please run once with wifi to download dependencies")
+            if debug:
+                print("[DEBUG] [1] ", os.system("which python"))
         elif platform == "win32":
             import ctypes
             self.user32 = ctypes.windll.user32
             self.screensize = self.user32.GetSystemMetrics(78), self.user32.GetSystemMetrics(79)
-            print("[CORE STATUS]: Checking local Python, pip, and python versions and updating as required...")
+            print("[STATUS]: CORE, Checking local Python, pip, and python versions and updating as required...")
             os.system('cmd /c "python.exe -m pip install --upgrade pip"')
             os.system('cmd /c "pip install pip-review"')
             os.system('cmd /c "pip-review --auto"')
             os.system('cmd /c "pip install opencv-python"')
-            print("[CORE COMPLETE] Your system's pip installer version and every dependancy of this software has been checked for updates automatically.")
+            print("[STATUS] CORE COMPLETE. Your system's pip installer version and every dependancy of this software has been checked for updates automatically.")
         self.version = version[0:4].rstrip(".")
         from steady_core import SteadyCore
         SteadyCore(self.screensize)
+    def check_if_user_has_wifi(self, timeout=5):
+        try:
+            # response = subprocess.run(
+            #     ['networksetup', '-getairportnetwork', 'en0'],
+            #     timeout=timeout
+            # ).returncode == 0
+            response = subprocess.run(
+                ['networksetup', '-getairportnetwork', 'en0'],
+                timeout=timeout,
+                capture_output=True,
+            )
+            if "You are not associated" not in response.stdout.decode('utf-8'):
+                return True
+            else:
+                return False
+        except subprocess.TimeoutExpired:
+            return False
+
+
 if __name__ == "__main__":
     import sys
     from steady_core import SteadyCore
