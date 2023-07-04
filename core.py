@@ -28,7 +28,6 @@ class Core:
             print("Please try this demo from a windows device")
             exit()
         elif platform == "darwin":
-            has_wifi = self.check_if_user_has_wifi()
             if self.check_if_user_has_wifi():
                 os.system("bash setup.sh")
             else:
@@ -51,12 +50,9 @@ class Core:
         self.version = version[0:4].rstrip(".")
         from steady_core import SteadyCore
         SteadyCore(self.screensize)
+
     def check_if_user_has_wifi(self, timeout=5):
         try:
-            # response = subprocess.run(
-            #     ['networksetup', '-getairportnetwork', 'en0'],
-            #     timeout=timeout
-            # ).returncode == 0
             response = subprocess.run(
                 ['networksetup', '-getairportnetwork', 'en0'],
                 timeout=timeout,

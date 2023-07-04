@@ -22,6 +22,7 @@ class SteadyCore:
         :param is_mac: bool : A flag for if the automatic OS check logic has determined we are on a mac device, as mac
         seems to like handcuffing python scripts for security.
         """
+        DEBUG = False
         self.SCREENSIZE = screen_size
         self.IS_MAC = is_mac
         print("[STEADY CORE INITIALIZED]: Setup complete, welcome to the demo...")
@@ -45,6 +46,11 @@ class SteadyCore:
         camera_process.join()
         feature_process.join()
         user_interface_process.join()
+
+        if DEBUG:
+            debug_process = multiprocessing.Process(target=debug_queue_printer, args=(camera_to_feature_queue))
+            debug_process.start()
+            debug_process.join()
 
     def get_video_sources(self):
         """
@@ -136,20 +142,23 @@ class SteadyCore:
 
 
 def look_and_clear(queue):
-    print("[DEBUG] LOOK AND CLEAR CALLED")
+    """
+    A function which reads a FIFO queue until it is empty, and returns the most recent value, effectively turning it
+    into a LIFO (last in first out) queue, only operating in a small <5ms time window.
+    :param queue: multiprocessing.Queue object : FIFO queue of storing any datatype, can be empty.
+    :return: any : Returns the most recent value regardless of datatype.
+    """
     value = None
     while value is None:
         try:
             value = queue.get_nowait()
         except:
             continue
-        print(value)
         while value is not None:
             prev_val = value
             try:
                 value = queue.get_nowait()
             except:
-                print("[DEBUG] LOOK AND CLEAR SUCCESS")
                 return prev_val
 
 
@@ -173,15 +182,10 @@ def multiprocessing_camera_process(termination_queue, camera_to_feature_queue, c
     while True:
         # @TO-DO WHERE I LEFT OFF ON PLANE
         ret, img = web_cam.read()
-        print("ret = ", ret)
-        print("img = ")
-        print(img)
-        if ret and img.size.width > 0:
-            camera_to_feature_queue.put(img)
-            print("[DEBUG]: IMAGE PUT IN QUEUE")
-        else:
-            continue
-        time.sleep(0.001)
+        if ret:
+            if img.shape[0] > 0:
+                camera_to_feature_queue.put(img)
+        time.sleep(0.003)
 
 def multiprocessing_feature_process(termination_queue, camera_to_feature_queue, feature_to_ui_queue):
     # TO-DO
@@ -222,3 +226,9 @@ def multiprocessing_ui_process(termination_queue, camera_to_ui_queue, feature_to
 
 def debug_image_loader():
     return cv2.imread(os.path.join("src", "mac_debug_img.png"))
+
+def debug_queue_printer(queue):
+    while True:
+        val = queue.get()
+        print(type(val))
+        queue.put(val)
