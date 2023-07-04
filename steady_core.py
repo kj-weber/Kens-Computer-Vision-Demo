@@ -16,9 +16,11 @@ class SteadyCore:
     """
     def __init__(self, screen_size, is_mac):
         """
-
         A setup program that is OS independent, spins off the main processes of the demo
 
+        :param screen_size: lst : (screen_width_in_pixels, screen_height_in_pixels)
+        :param is_mac: bool : A flag for if the automatic OS check logic has determined we are on a mac device, as mac
+        seems to like handcuffing python scripts for security.
         """
         self.SCREENSIZE = screen_size
         self.IS_MAC = is_mac
@@ -134,32 +136,53 @@ class SteadyCore:
 
 
 def look_and_clear(queue):
+    print("[DEBUG] LOOK AND CLEAR CALLED")
     value = None
-    while True:
+    while value is None:
         try:
             value = queue.get_nowait()
         except:
-            return value
+            continue
+        print(value)
+        while value is not None:
+            prev_val = value
+            try:
+                value = queue.get_nowait()
+            except:
+                print("[DEBUG] LOOK AND CLEAR SUCCESS")
+                return prev_val
 
 
 
 def multiprocessing_camera_process(termination_queue, camera_to_feature_queue, camera_to_ui_queue, camera_source, is_mac_os):
     web_cam = cv2.VideoCapture(camera_source)
-    if not is_mac_os:
-        while True:
-            ret, img = web_cam.read()
-            # Mac prevents non-Apple developers from reading webcam :(
-            if not ret and img.size.width > 0:
-                camera_to_feature_queue.put(img)
-            else:
-                camera_to_feature_queue.put(None)
-            time.sleep(0.001)
-    else:
-        img = debug_image_loader()
-        while True:
+    # if not is_mac_os:
+    #     while True:
+    #         ret, img = web_cam.read()
+    #         # Mac prevents non-Apple developers from reading webcam :(
+    #         if not ret and img.size.width > 0:
+    #             camera_to_feature_queue.put(img)
+    #         else:
+    #             camera_to_feature_queue.put(None)
+    #         time.sleep(0.001)
+    # else:
+    #     img = debug_image_loader()
+    #     while True:
+    #         camera_to_feature_queue.put(img)
+    #         time.sleep(0.005)
+    while True:
+        # @TO-DO WHERE I LEFT OFF ON PLANE
+        ret, img = web_cam.read()
+        print("ret = ", ret)
+        print("img = ")
+        print(img)
+        if ret and img.size.width > 0:
             camera_to_feature_queue.put(img)
-            time.sleep(0.005)
-            
+            print("[DEBUG]: IMAGE PUT IN QUEUE")
+        else:
+            continue
+        time.sleep(0.001)
+
 def multiprocessing_feature_process(termination_queue, camera_to_feature_queue, feature_to_ui_queue):
     # TO-DO
     while True:
@@ -167,7 +190,7 @@ def multiprocessing_feature_process(termination_queue, camera_to_feature_queue, 
         if img is not None:
             feature_to_ui_queue.put(img)
         else:
-            feature_to_ui_queue.put(None)
+            continue
 
 
 def multiprocessing_ui_process(termination_queue, camera_to_ui_queue, feature_to_ui_queue, SCREEN_SIZE):

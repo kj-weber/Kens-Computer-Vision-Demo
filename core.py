@@ -9,6 +9,18 @@ class Core:
 
     """
     def __init__(self, debug):
+        """
+
+        A fairly complete init function which checks the OS, stops the program until linux is supported, downloads
+        dependencies with pip if the user is on windows, and does a nifty shell->recursion approach if on mac to get
+        around the fact python cannot download pip modules from a python script on mac for security purposes.
+
+        @TO-DO: When user has no wifi, pip install calls take way too long to timeout. In the future, we should create
+        a last_updated local file and check the date, if it's recent, we can skip all the pip installs. For Mac, this
+        will require more shell script logic.
+
+        :param debug: @TO-DO A debug parameter which uses pre-set values for each input and queue to test new code changes.
+        """
         from sys import platform
         print("[CORE INITIALIZED]: Kenneth's DEMO core application created...")
         if platform == "linux" or platform == "linux2":
