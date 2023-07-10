@@ -37,6 +37,7 @@ class Core:
                     print("[STATUS] ERROR: Hi there, please run once with wifi to download dependencies")
             if debug:
                 print("[DEBUG] [1] ", os.system("which python"))
+            exit()
         elif platform == "win32":
             import ctypes
             self.user32 = ctypes.windll.user32
@@ -51,7 +52,8 @@ class Core:
         from steady_core import SteadyCore
         SteadyCore(self.screensize)
 
-    def check_if_user_has_wifi(self, timeout=5):
+    @staticmethod
+    def check_if_user_has_wifi(timeout=5):
         try:
             response = subprocess.run(
                 ['networksetup', '-getairportnetwork', 'en0'],
@@ -74,3 +76,4 @@ if __name__ == "__main__":
     IS_MAC = True
     screensize = [int(res[0]), int(res[1])]
     SteadyCore(screensize, IS_MAC)
+    exit()
