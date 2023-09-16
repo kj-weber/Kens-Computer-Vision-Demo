@@ -189,6 +189,22 @@ def request_termination(queue):
     queue.put(True)
 
 
+def clear_and_place(img, queue):
+    """
+    A function that reads the queue rapidly until it is empty, and then places a
+    :param img: cv:mat : An image, presumably from the laptop or accessory webcam video steam.
+    :param queue: multiprocessing.Queue : presumably the queue which shares the camera image.
+    :return:
+    """
+    value = 0
+    while value is not None:
+        try:
+            value = queue.get_nowait()
+        except:
+            queue.put(img)
+            return True
+    queue.put(img)
+    return True
 def multiprocessing_camera_process(termination_queue, camera_to_feature_queue, camera_to_ui_queue, camera_source, is_mac_os):
     """
     The process which continously reads the selected camera source, most likely a webcam.
