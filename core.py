@@ -23,11 +23,13 @@ class Core:
         """
         print("[STATUS]: CORE INITIALIZED, Kenneth's DEMO core application created...")
         self.screensize = [0, 0]
+        self.is_mac = False
         if platform == "linux" or platform == "linux2":
             # TO-DO linux
             print("Please try this demo from a windows device")
             exit()
         elif platform == "darwin":
+            self.is_mac = True
             if self.check_if_user_has_wifi():
                 os.system("bash setup.sh")
             else:
@@ -50,7 +52,7 @@ class Core:
             print("[STATUS] CORE COMPLETE. Your system's pip installer version and every dependancy of this software has been checked for updates automatically.")
         self.version = version[0:4].rstrip(".")
         from steady_core import SteadyCore
-        SteadyCore(self.screensize)
+        SteadyCore(self.screensize, self.is_mac)
 
     @staticmethod
     def check_if_user_has_wifi(timeout=5):

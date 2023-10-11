@@ -200,15 +200,21 @@ def multiprocessing_camera_process(termination_queue, camera_to_feature_queue, c
     :return: Nothing. All I/O is handled by queues.
     """
     # @TODO fix camera failure when called from command line on macOS
-    web_cam = cv2.VideoCapture(camera_source)
+    if camera_source == 0:
+        img = cv2.imread('src//test.jpg')
+    else:
+        web_cam = cv2.VideoCapture(camera_source)
     while True:
         termination_requested = termination_check(termination_queue)
         if termination_requested:
             exit()
-        ret, img = web_cam.read()
-        if ret:
-            if img.shape[0] > 0:
-                camera_to_feature_queue.put(img)
+        if camera_source > 0:
+            ret, img = web_cam.read()
+            if ret:
+                if img.shape[0] > 0:
+                    camera_to_feature_queue.put(img)
+        else:
+            camera_to_feature_queue.put(img)
         time.sleep(0.003)
 
 
