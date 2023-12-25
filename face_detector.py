@@ -34,7 +34,7 @@ class FaceDetector:
     def draw_faces(self):
         """
         A function which draws a bounding box on each face.
-        :return: self.img : The image, now with bounding boxes.
+        :return: self.img : cv_mat : The image, now with bounding boxes.
         """
         for (x, y, w, h) in self.faces:
             cv2.rectangle(self.img, (x, y), (x + w, y + h), (255, 0, 0), 2)

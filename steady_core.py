@@ -189,11 +189,10 @@ def request_termination(queue):
     queue.put(True)
 
 
-def clear_and_place(img, queue):
+def clear_queue(queue):
     """
-    A function that reads the queue rapidly until it is empty, and then places a
-    :param img: cv:mat : An image, presumably from the laptop or accessory webcam video steam.
-    :param queue: multiprocessing.Queue : presumably the queue which shares the camera image.
+    A function that reads the queue rapidly until it is empty.
+    :param queue: multiprocessing.Queue :
     :return:
     """
     value = 0
@@ -201,9 +200,7 @@ def clear_and_place(img, queue):
         try:
             value = queue.get_nowait()
         except:
-            queue.put(img)
             return True
-    queue.put(img)
     return True
 def multiprocessing_camera_process(termination_queue, camera_to_feature_queue, camera_to_ui_queue, camera_source, is_mac_os):
     """
@@ -224,8 +221,10 @@ def multiprocessing_camera_process(termination_queue, camera_to_feature_queue, c
         ret, img = web_cam.read()
         if ret:
             if img.shape[0] > 0:
+                clear_queue(camera_to_feature_queue)
+                clear_queue(camera_to_ui_queue)
                 camera_to_feature_queue.put(img)
-        time.sleep(0.003)
+                camera_to_ui_queue.put(img)
 
 
 def multiprocessing_feature_process(termination_queue, camera_to_feature_queue, feature_to_ui_queue):
@@ -243,14 +242,14 @@ def multiprocessing_feature_process(termination_queue, camera_to_feature_queue, 
         termination_requested = termination_check(termination_queue)
         if termination_requested:
             exit()
-        img = look_and_clear(camera_to_feature_queue) # @TODO move the "clear" portion to the camera process, to reduce compute here.
+        img = camera_to_feature_queue.get()
         if img is not None:
             face_detect.detect(img)
             img = face_detect.draw_faces()
+            clear_queue(feature_to_ui_queue)
             feature_to_ui_queue.put(img)
         else:
             continue
-        time.sleep(0.003)
 
 
 def multiprocessing_ui_process(termination_queue, camera_to_ui_queue, feature_to_ui_queue, screensize):
@@ -269,10 +268,11 @@ def multiprocessing_ui_process(termination_queue, camera_to_ui_queue, feature_to
         if termination_requested:
             exit()
         last_content = content
-        content = look_and_clear(feature_to_ui_queue)
+        content = feature_to_ui_queue.get()
         if content is None:
             content = last_content
         cv2.imshow("Ken's Demo", content)
         if cv2.waitKey(5) == ord("q"):
             request_termination(termination_queue)
             cv2.destroyAllWindows()
+        clear_queue(feature_to_ui_queue)
