@@ -2,5 +2,10 @@
 .idea/
 __pycache__/
 *.pyc
+.pytest_cache/
 venv/
 .venv/
+venv_ken/
+.venv_ken/
+calibration.json
+benchmarks.jsonl
